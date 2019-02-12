@@ -1,0 +1,94 @@
+<script>
+
+(function($) { 
+
+ var variantImages = {},
+
+ thumbnails,
+
+ variant,
+
+ variantImage,
+
+ optionValue;
+
+ {% for variant in product.variants %}
+
+ variant = {{ variant | json }};
+ //console.log(variant);
+
+ if ( typeof variant.featured_image !== 'undefined' && variant.featured_image !== null ) {
+
+ variantImage = variant.featured_image.src.split('?')[0].replace(/http(s)?:/,'');
+
+ variantImages[variantImage] = variantImages[variantImage] || {};
+
+ {% for option in product.options %}
+
+ {% assign option_value = variant.options[forloop.index0] %}
+
+ {% assign option_key = 'option-' | append: forloop.index0 %}
+
+ if (typeof variantImages[variantImage][{{ option_key | json }}] === 'undefined') {
+
+ variantImages[variantImage][{{ option_key | json }}] = {{ option_value | json }};
+// console.log(variantImages[variantImage][{{ option_key | json }}] + 'kkkkeeeeyyyyy');
+
+ }
+
+ else {
+
+ var oldValue = variantImages[variantImage][{{ option_key | json }}];
+
+ if ( oldValue !== null && oldValue !== {{ option_value | json }} ) {
+
+ variantImages[variantImage][{{ option_key | json }}] = null;
+
+ }
+
+ }
+
+ {% endfor %}
+
+ }
+
+ {% endfor %}
+
+ $(function() {
+
+ thumbnails = $('img[src*="/products/"]').not(':first');
+  console.log(thumbnails);
+ if (thumbnails.size()) {
+
+ thumbnails.bind('click', function() {
+  // alert('ok');
+
+ var image = $(this).attr('src').split('?')[0].replace(/(_thumb\.)|(_small\.)|(_compact\.)|(_medium\.)|(_large\.)|(_grande\.)/,'.');
+console.log(image);
+ if (typeof variantImages[image] !== 'undefined') {
+
+ {% for option in product.options %}
+
+ optionValue = variantImages[image]['option-{{ forloop.index0 }}'];
+console.log($('.single-option-selector:eq({{ forloop.index0 }}) option').filter(function() { return $(this).text() === optionValue }).length);
+ if (optionValue !== null && $('.single-option-selector:eq({{ forloop.index0 }}) option').filter(function() { return $(this).text() === optionValue }).length) {
+  console.log('not null');
+ $('.single-option-selector:eq({{ forloop.index0 }})').val(optionValue).trigger('change');
+
+ }
+
+ {% endfor %}
+
+ }
+
+ });
+
+ }
+
+ });
+
+})(jQuery);
+
+</script> 
+
+{% endif %}
